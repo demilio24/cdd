@@ -1,0 +1,166 @@
+{
+  "name": "4. Directorio",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cdd",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        60,
+        80
+      ],
+      "id": "63114199-52c0-4165-9a03-06907e99a4d8",
+      "name": "Webhook",
+      "webhookId": "87d5c751-f85f-468b-af03-458872e73098"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const input = $input.item.json;\nconst contacto = input.contact || {};\n\nconst firstName = contacto.firstName ?? \"Desconocido\";\nconst lastName = contacto.lastName ?? \"\";\nconst id = contacto.id ?? \"N/A\";\nconst countryCode = (contacto.country || \"\").toUpperCase();\nconst customFields = contacto.customFields || [];\n\n// Obtener el riesgo del custom field en posición 3\nlet riesgo = \"Sin procesar\";\nif (customFields[3] && customFields[3].value !== null && customFields[3].value !== undefined) {\n  const riesgoValue = String(customFields[3].value).toLowerCase().trim();\n  if ([\"bajo\", \"medio\", \"alto\"].includes(riesgoValue)) {\n    riesgo = riesgoValue;\n  }\n}\n\n// Mapeo de IDs de custom fields a nombres\nconst customFieldsMap = {\n  \"2odrreZ99jX2sXv6Velj\": \"1. Vehículos, Equipos y Repuestos\",\n  \"r2JSwPscUjzZEsJ7qUww\": \"2. Ropa para Hombres, Mujeres, Niñas, Niños y Bebés\",\n  \"1CdOS3S2ohiPpUyjDdyM\": \"3. Perfumes y Cosméticos\",\n  \"xd4xJZKeFidRMflqjCGe\": \"4. Oficina y Tecnología\",\n  \"7pUDkOn24GjA5EPsBCN3\": \"5. Mercancía en General\",\n  \"igjBzAGAcOfll1WPWD8K\": \"6. Joyería y Relojería\",\n  \"7CRlJNyHZCwlBA71MhTr\": \"7. Industria y Construcción\",\n  \"dCoSQmVTtl7KHJY2FUBY\": \"8. Hogar, Muebles y Electrodomésticos\",\n  \"TE5CHZbyLHvMU6zWJj0T\": \"9. Ferretería\",\n  \"uZmbHVzGGHVyfMPmuuEI\": \"10. Electrónica y Comunicación\",\n  \"JfbdfMVSqCmdqqZx0m9G\": \"11. Carteras y Maletas\",\n  \"DkuAlM21lXj7VufGzsdh\": \"12. Logística y Almacenamiento\",\n  \"qbS9aEwfXt82OYC1qLFq\": \"13. Textiles\",\n  \"G6janH7ZARlF9AvniUNd\": \"14. Juguetes\"\n};\n\n// Procesar custom fields y convertir IDs a nombres\nconst processedCustomFields = [];\nfor (const field of customFields) {\n  if (field.id && customFieldsMap[field.id]) {\n    processedCustomFields.push({\n      id: field.id,\n      name: customFieldsMap[field.id],\n      value: field.value || null\n    });\n  }\n}\n\nconst countryNames = {\n  AD: \"Andorra\",\n  AE: \"Emiratos Árabes Unidos\",\n  AF: \"Afganistán\",\n  AG: \"Antigua y Barbuda\",\n  AI: \"Anguila\",\n  AL: \"Albania\",\n  AM: \"Armenia\",\n  AO: \"Angola\",\n  AQ: \"Antártida\",\n  AR: \"Argentina\",\n  AS: \"Samoa Americana\",\n  AT: \"Austria\",\n  AU: \"Australia\",\n  AW: \"Aruba\",\n  AX: \"Islas Aland\",\n  AZ: \"Azerbaiyán\",\n  BA: \"Bosnia y Herzegovina\",\n  BB: \"Barbados\",\n  BD: \"Bangladés\",\n  BE: \"Bélgica\",\n  BF: \"Burkina Faso\",\n  BG: \"Bulgaria\",\n  BH: \"Baréin\",\n  BI: \"Burundi\",\n  BJ: \"Benín\",\n  BL: \"San Bartolomé\",\n  BM: \"Bermudas\",\n  BN: \"Brunéi\",\n  BO: \"Bolivia\",\n  BQ: \"Caribe neerlandés\",\n  BR: \"Brasil\",\n  BS: \"Bahamas\",\n  BT: \"Bután\",\n  BV: \"Isla Bouvet\",\n  BW: \"Botsuana\",\n  BY: \"Bielorrusia\",\n  BZ: \"Belice\",\n  CA: \"Canadá\",\n  CC: \"Islas Cocos\",\n  CD: \"República Democrática del Congo\",\n  CF: \"República Centroafricana\",\n  CG: \"Congo\",\n  CH: \"Suiza\",\n  CI: \"Costa de Marfil\",\n  CK: \"Islas Cook\",\n  CL: \"Chile\",\n  CM: \"Camerún\",\n  CN: \"China\",\n  CO: \"Colombia\",\n  CR: \"Costa Rica\",\n  CU: \"Cuba\",\n  CV: \"Cabo Verde\",\n  CW: \"Curazao\",\n  CX: \"Isla de Navidad\",\n  CY: \"Chipre\",\n  CZ: \"Chequia\",\n  DE: \"Alemania\",\n  DJ: \"Yibuti\",\n  DK: \"Dinamarca\",\n  DM: \"Dominica\",\n  DO: \"República Dominicana\",\n  DZ: \"Argelia\",\n  EC: \"Ecuador\",\n  EE: \"Estonia\",\n  EG: \"Egipto\",\n  EH: \"Sáhara Occidental\",\n  ER: \"Eritrea\",\n  ES: \"España\",\n  ET: \"Etiopía\",\n  FI: \"Finlandia\",\n  FJ: \"Fiyi\",\n  FK: \"Islas Malvinas\",\n  FM: \"Micronesia\",\n  FO: \"Islas Feroe\",\n  FR: \"Francia\",\n  GA: \"Gabón\",\n  GB: \"Reino Unido\",\n  GD: \"Granada\",\n  GE: \"Georgia\",\n  GF: \"Guayana Francesa\",\n  GG: \"Guernesey\",\n  GH: \"Ghana\",\n  GI: \"Gibraltar\",\n  GL: \"Groenlandia\",\n  GM: \"Gambia\",\n  GN: \"Guinea\",\n  GP: \"Guadalupe\",\n  GQ: \"Guinea Ecuatorial\",\n  GR: \"Grecia\",\n  GT: \"Guatemala\",\n  GU: \"Guam\",\n  GW: \"Guinea-Bisáu\",\n  GY: \"Guyana\",\n  HK: \"RAE de Hong Kong (China)\",\n  HN: \"Honduras\",\n  HR: \"Croacia\",\n  HT: \"Haití\",\n  HU: \"Hungría\",\n  ID: \"Indonesia\",\n  IE: \"Irlanda\",\n  IL: \"Israel\",\n  IN: \"India\",\n  IQ: \"Irak\",\n  IR: \"Irán\",\n  IS: \"Islandia\",\n  IT: \"Italia\",\n  JM: \"Jamaica\",\n  JO: \"Jordania\",\n  JP: \"Japón\",\n  KE: \"Kenia\",\n  KG: \"Kirguistán\",\n  KH: \"Camboya\",\n  KI: \"Kiribati\",\n  KM: \"Comoras\",\n  KN: \"San Cristóbal y Nieves\",\n  KP: \"Corea del Norte\",\n  KR: \"Corea del Sur\",\n  KW: \"Kuwait\",\n  KZ: \"Kazajistán\",\n  LA: \"Laos\",\n  LB: \"Líbano\",\n  LC: \"Santa Lucía\",\n  LI: \"Liechtenstein\",\n  LK: \"Sri Lanka\",\n  LR: \"Liberia\",\n  LS: \"Lesoto\",\n  LT: \"Lituania\",\n  LU: \"Luxemburgo\",\n  LV: \"Letonia\",\n  LY: \"Libia\",\n  MA: \"Marruecos\",\n  MC: \"Mónaco\",\n  MD: \"Moldavia\",\n  ME: \"Montenegro\",\n  MG: \"Madagascar\",\n  MH: \"Islas Marshall\",\n  MK: \"Macedonia del Norte\",\n  ML: \"Malí\",\n  MM: \"Birmania\",\n  MN: \"Mongolia\",\n  MO: \"RAE de Macao (China)\",\n  MR: \"Mauritania\",\n  MT: \"Malta\",\n  MU: \"Mauricio\",\n  MV: \"Maldivas\",\n  MW: \"Malaui\",\n  MX: \"México\",\n  MY: \"Malasia\",\n  MZ: \"Mozambique\",\n  NA: \"Namibia\",\n  NE: \"Níger\",\n  NG: \"Nigeria\",\n  NI: \"Nicaragua\",\n  NL: \"Países Bajos\",\n  NO: \"Noruega\",\n  NP: \"Nepal\",\n  NR: \"Nauru\",\n  NZ: \"Nueva Zelanda\",\n  OM: \"Omán\",\n  PA: \"Panamá\",\n  PE: \"Perú\",\n  PG: \"Papúa Nueva Guinea\",\n  PH: \"Filipinas\",\n  PK: \"Pakistán\",\n  PL: \"Polonia\",\n  PT: \"Portugal\",\n  PY: \"Paraguay\",\n  QA: \"Catar\",\n  RO: \"Rumanía\",\n  RU: \"Rusia\",\n  RW: \"Ruanda\",\n  SA: \"Arabia Saudita\",\n  SB: \"Islas Salomón\",\n  SC: \"Seychelles\",\n  SD: \"Sudán\",\n  SE: \"Suecia\",\n  SG: \"Singapur\",\n  SI: \"Eslovenia\",\n  SK: \"Eslovaquia\",\n  SL: \"Sierra Leona\",\n  SM: \"San Marino\",\n  SN: \"Senegal\",\n  SO: \"Somalia\",\n  SR: \"Surinam\",\n  ST: \"Santo Tomé y Príncipe\",\n  SV: \"El Salvador\",\n  SY: \"Siria\",\n  SZ: \"Esuatini\",\n  TD: \"Chad\",\n  TG: \"Togo\",\n  TH: \"Tailandia\",\n  TJ: \"Tayikistán\",\n  TL: \"Timor Oriental\",\n  TN: \"Túnez\",\n  TO: \"Tonga\",\n  TR: \"Turquía\",\n  TT: \"Trinidad y Tobago\",\n  TV: \"Tuvalu\",\n  TZ: \"Tanzania\",\n  UA: \"Ucrania\",\n  UG: \"Uganda\",\n  US: \"Estados Unidos\",\n  UY: \"Uruguay\",\n  UZ: \"Uzbekistán\",\n  VA: \"Ciudad del Vaticano\",\n  VC: \"San Vicente y las Granadinas\",\n  VE: \"Venezuela\",\n  VN: \"Vietnam\",\n  YE: \"Yemen\",\n  ZA: \"Sudáfrica\",\n  ZM: \"Zambia\",\n  ZW: \"Zimbabue\",\n  IM: \"Isla de Man\",\n  JE: \"Jersey\",\n  KY: \"Islas Caimán\",\n  MP: \"Islas Marianas del Norte\",\n  MS: \"Montserrat\",\n  NU: \"Niue\",\n  PF: \"Polinesia Francesa\",\n  PM: \"San Pedro y Miquelón\",\n  PR: \"Puerto Rico\",\n  PS: \"Palestina\",\n  RE: \"Reunión\",\n  RS: \"Serbia\",\n  SH: \"Santa Elena\",\n  SJ: \"Svalbard y Jan Mayen\",\n  TC: \"Islas Turcas y Caicos\",\n  TF: \"Territorios Australes Franceses\",\n  TK: \"Tokelau\",\n  TW: \"Taiwán\",\n  UM: \"Islas Ultramarinas Menores de Estados Unidos\",\n  VG: \"Islas Vírgenes Británicas\",\n  VI: \"Islas Vírgenes de los Estados Unidos\",\n  WF: \"Wallis y Futuna\",\n  WS: \"Samoa\",\n  YT: \"Mayotte\"\n};\n\nconst countryName = countryNames[countryCode] ?? null;\nconst countryFlagUrl = countryCode ? `https://flagcdn.com/${countryCode.toLowerCase()}.svg` : null;\n\nreturn {\n  name: `${firstName} ${lastName}`.trim(),\n  id: id,\n  risk: riesgo,\n  country: countryName,\n  country_flag_url: countryFlagUrl,\n  custom_fields: processedCustomFields\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        80
+      ],
+      "id": "fe900173-bee5-458f-9ac7-56beaedaa590",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "=https://services.leadconnectorhq.com/contacts/{{ $json.body.contact_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Version",
+              "value": "2021-07-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "locationId",
+              "value": "kPVZCNKrF6l1XnIZB15I"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        80
+      ],
+      "id": "62d84f3d-4487-4b84-98a6-59c29653969d",
+      "name": "Search for contact",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GEvUk2lqhlMKxrPU",
+          "name": "GHL SL ADMIN"
+        },
+        "httpBearerAuth": {
+          "id": "avMLyPSJInPZl1Dw",
+          "name": "SL ADMIN GHL SUB ACCOUNT PRIVATE INTEGRATION"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "nilsdigital.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+            "content-length": "37",
+            "accept": "application/json",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9,es;q=0.8,ru;q=0.7,ko;q=0.6",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "186.73.212.199",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "PA",
+            "cf-ray": "953ed8d991b5a528-MIA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://cdd.nilsdigital.com",
+            "priority": "u=1, i",
+            "referer": "https://cdd.nilsdigital.com/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"137\", \"Chromium\";v=\"137\", \"Not/A)Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "186.73.212.199, 172.70.255.47",
+            "x-forwarded-host": "nilsdigital.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-90-644db48b77-rp4s7",
+            "x-is-trusted": "yes",
+            "x-real-ip": "186.73.212.199"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "contact_id": "qtWqagJ2uumzRVOCBEtk"
+          },
+          "webhookUrl": "https://nilsdigital.app.n8n.cloud/webhook/cdd",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search for contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for contact": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "330fd610-b0c2-4b32-acea-41a1c6446fbd",
+  "meta": {
+    "instanceId": "82420622e8beeac28a8beb79036622396503942feaa2d7b20180d51c0acd30d5"
+  },
+  "id": "ESDWgkEdMLHTHxnH",
+  "tags": []
+}
