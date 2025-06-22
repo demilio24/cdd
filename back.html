@@ -4,17 +4,15 @@ const contacto = input.contact || {};
 const firstName = contacto.firstName ?? "Desconocido";
 const lastName = contacto.lastName ?? "";
 const id = contacto.id ?? "N/A";
-const tags = contacto.tags || [];
 const countryCode = (contacto.country || "").toUpperCase();
 const customFields = contacto.customFields || [];
 
-let riesgo = "sin procesar";
-
-for (const tag of tags) {
-  const tagLower = tag.toLowerCase();
-  if (["bajo", "medio", "alto"].includes(tagLower)) {
-    riesgo = tagLower;
-    break;
+// Obtener el riesgo del custom field en posición 3
+let riesgo = "Sin procesar";
+if (customFields[3] && customFields[3].value !== null && customFields[3].value !== undefined) {
+  const riesgoValue = String(customFields[3].value).toLowerCase().trim();
+  if (["bajo", "medio", "alto"].includes(riesgoValue)) {
+    riesgo = riesgoValue;
   }
 }
 
@@ -298,4 +296,3 @@ return {
   country_flag_url: countryFlagUrl,
   custom_fields: processedCustomFields
 };
-
