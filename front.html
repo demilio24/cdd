@@ -165,6 +165,11 @@
     background-color: #f8d7da;
     color: #721c24;
   }
+
+  .dir-custom-field-value.sin {
+    background-color: #e2e3e5;
+    color: #6c757d;
+  }
 </style>
 
 <script>
@@ -184,7 +189,7 @@
     try {
       console.log("📤 Enviando petición con:", { contact_id: contactId });
       
-      const res = await fetch('https://nilsdigital.app.n8n.cloud/webhook-test/cdd', {
+      const res = await fetch('https://nilsdigital.app.n8n.cloud/webhook/cdd', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
