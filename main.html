@@ -1,0 +1,302 @@
+<div class="dir-box">
+  <form id="dir-form">
+    <input type="text" name="contact_id" class="dir-input" placeholder="Ingrese el ID del contacto..." required>
+    <button type="submit" class="dir-button">Buscar Contacto</button>
+  </form>
+
+  <div id="dir-loading" class="dir-loading" style="display:none;">
+    <div class="dir-spinner"></div>
+    <p>Cargando contacto...</p>
+  </div>
+
+  <div id="dir-result" class="dir-result" style="display:none;"></div>
+</div>
+
+<style>
+  .dir-box {
+    font-family: 'Poppins', sans-serif;
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .dir-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    margin-bottom: 1rem;
+    background-image: url('https://img.icons8.com/ios-glyphs/30/000000/search--v1.png');
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    padding-left: 40px;
+    box-sizing: border-box;
+  }
+
+  .dir-button {
+    background-color: #155eef;
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .dir-loading {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dir-spinner {
+    border: 5px solid #e3e3e3;
+    border-top: 5px solid #155eef;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: dir-spin 1s linear infinite;
+  }
+
+  @keyframes dir-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .dir-result {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .dir-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+  }
+
+  .dir-label {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .dir-value {
+    color: #444;
+    text-align: right;
+  }
+
+  .dir-risk {
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .dir-bajo { background-color: #d4edda; color: #155724; }
+  .dir-medio { background-color: #fff3cd; color: #856404; }
+  .dir-alto { background-color: #f8d7da; color: #721c24; }
+  .dir-sin { background-color: #e2e3e5; color: #6c757d; }
+
+  .dir-custom-fields {
+    margin-top: 20px;
+    padding: 0;
+    border: none;
+  }
+
+  .dir-custom-fields-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dir-custom-field {
+    background-color: #f8f9fa;
+    padding: 10.8px 14.4px;
+    border-radius: 8px;
+    margin-bottom: 10.8px;
+    border: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dir-custom-field-name {
+    font-weight: 500;
+    color: #495057;
+    font-size: 14px;
+    flex: 1;
+  }
+
+  .dir-custom-field-value {
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .dir-custom-field-value.bajo {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .dir-custom-field-value.medio {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .dir-custom-field-value.alto {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('dir-form');
+  const loading = document.getElementById('dir-loading');
+  const result = document.getElementById('dir-result');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    result.style.display = 'none';
+    loading.style.display = 'flex';
+
+    const contactId = e.target.contact_id.value.trim();
+    console.log("🔍 ID ingresado:", contactId);
+
+    try {
+      console.log("📤 Enviando petición con:", { contact_id: contactId });
+      
+      const res = await fetch('https://nilsdigital.app.n8n.cloud/webhook-test/cdd', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ contact_id: contactId })
+      });
+
+      console.log("📡 Estado de respuesta:", res.status);
+      console.log("📡 Headers de respuesta:", res.headers);
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const raw = await res.json();
+      console.log("📦 Respuesta cruda:", raw);
+
+      const data = Array.isArray(raw) ? raw[0] : raw;
+      console.log("✅ Objeto procesado:", data);
+
+      const name = data?.name;
+      const id = data?.id;
+      const risk = data?.risk;
+      const country = data?.country || null;
+      const flagUrl = data?.country_flag_url || null;
+      const customFields = data?.custom_fields || [];
+
+      if (!name || !id || name === "Desconocido" || id === "N/A") {
+        result.innerHTML = `<p>❌ No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.</p>`;
+      } else {
+        const riskClass = risk === 'bajo' ? 'dir-bajo' :
+                          risk === 'medio' ? 'dir-medio' :
+                          risk === 'alto' ? 'dir-alto' : 'dir-sin';
+
+        // Generar HTML para custom fields solo si existen
+        let customFieldsHtml = '';
+        let showRiskField = true;
+        
+        if (customFields && customFields.length > 0) {
+          showRiskField = false; // No mostrar riesgo si hay custom fields
+          customFieldsHtml = `
+            <div class="dir-custom-fields">
+              <div class="dir-custom-fields-title">📊 Perfil De Riesgo Por Segmento De Negocio</div>
+              ${customFields.map(field => `
+                <div class="dir-custom-field">
+                  <div class="dir-custom-field-name">${field.name}</div>
+                  ${field.value ? `<div class="dir-custom-field-value ${field.value.toLowerCase()}">${field.value}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        result.innerHTML = `
+          <div class="dir-field"><span class="dir-label">👤 Nombre:</span> <span class="dir-value">${name}</span></div>
+          <div class="dir-field"><span class="dir-label">🆔 ID:</span> <span class="dir-value">${id}</span></div>
+          <div class="dir-field"><span class="dir-label">🌍 País:</span>
+            <span class="dir-value">${country ? `${country} <img src="${flagUrl}" alt="${country}" style="height: 18px; vertical-align: middle; margin-left: 6px;">` : `No aparece`}</span>
+          </div>
+          ${showRiskField ? `<div class="dir-field"><span class="dir-label">⚠️ Riesgo:</span>
+            <span class="dir-value"><span class="dir-risk ${riskClass}">${risk}</span></span>
+          </div>` : ''}
+          ${customFieldsHtml}
+        `;
+      }
+
+    } catch (err) {
+      console.error("❌ Error completo:", err);
+      console.error("❌ Mensaje de error:", err.message);
+      result.innerHTML = `<p>❌ No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.</p>`;
+    }
+
+    loading.style.display = 'none';
+    result.style.display = 'block';
+    form.style.display = 'block';
+  });
+
+  // Auto-fill from URL parameter
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("🔄 DOM loaded, checking URL...");
+    const search = window.location.search;
+    console.log("🌐 URL search:", search);
+    
+    let contactId = null;
+    
+    // Check for named parameters first (?id=xxx or ?contact_id=xxx)
+    const urlParams = new URLSearchParams(search);
+    contactId = urlParams.get('id') || urlParams.get('contact_id');
+    
+    // If no named parameter, check for direct parameter (?xxx)
+    if (!contactId && search.startsWith('?')) {
+      const rawParam = search.slice(1);
+      if (rawParam && /^[a-zA-Z0-9]+$/.test(rawParam)) {
+        contactId = rawParam;
+      }
+    }
+    
+    console.log("🆔 Contact ID found:", contactId);
+    
+    if (contactId) {
+      const input = document.querySelector('input[name="contact_id"]');
+      if (input) {
+        input.value = contactId;
+        console.log("✅ Input filled with:", contactId);
+        // Use setTimeout to ensure form is ready
+        setTimeout(() => {
+          console.log("🚀 Submitting form automatically...");
+          const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+          form.dispatchEvent(submitEvent);
+        }, 200);
+      }
+    }
+  });
+</script>
