@@ -1,24 +1,17 @@
 const input = $input.item.json;
 const contacto = input.contact || {};
 
-const firstName = contacto.firstName ?? "Desconocido";
+// Safely extract contact information with fallbacks
+const firstName = contacto.firstName ?? "";
 const lastName = contacto.lastName ?? "";
+const fullName = `${firstName} ${lastName}`.trim() || "Sin nombre";
 const id = contacto.id ?? "N/A";
 const countryCode = (contacto.country || "").toUpperCase();
 const customFields = contacto.customFields || [];
 
-// Obtener el riesgo del custom field en posición 3
-let riesgo = "Sin procesar";
-if (customFields[3] && customFields[3].value !== null && customFields[3].value !== undefined) {
-  const riesgoValue = String(customFields[3].value).toLowerCase().trim();
-  if (["bajo", "medio", "alto"].includes(riesgoValue)) {
-    riesgo = riesgoValue;
-  }
-}
-
 // Mapeo de IDs de custom fields a nombres
 const customFieldsMap = {
-  "2odrreZ99jX2sXv6Velj": "1. Vehículos, Equipos y Repuestos",
+  "CzPmBkYTraHyQ6Ph0Re6": "1. Vehículos, Equipos y Repuestos",
   "r2JSwPscUjzZEsJ7qUww": "2. Ropa para Hombres, Mujeres, Niñas, Niños y Bebés",
   "1CdOS3S2ohiPpUyjDdyM": "3. Perfumes y Cosméticos",
   "xd4xJZKeFidRMflqjCGe": "4. Oficina y Tecnología",
@@ -34,18 +27,54 @@ const customFieldsMap = {
   "G6janH7ZARlF9AvniUNd": "14. Juguetes"
 };
 
-// Procesar custom fields y convertir IDs a nombres
-const processedCustomFields = [];
-for (const field of customFields) {
-  if (field.id && customFieldsMap[field.id]) {
-    processedCustomFields.push({
+// Create a map to store segment fields with their positions
+const segmentFieldsData = new Map();
+let generalRisk = null;
+
+// First, check if there's a general risk value at index 2
+if (customFields[2] && customFields[2].value) {
+  const riskValue = String(customFields[2].value).toLowerCase().trim();
+  if (["bajo", "medio", "alto"].includes(riskValue)) {
+    generalRisk = riskValue;
+  }
+}
+
+// Process ALL custom fields - don't skip any
+for (let i = 0; i < customFields.length; i++) {
+  const field = customFields[i];
+  
+  if (!field || !field.id) continue;
+  
+  // Check if this field ID is one of our known segments
+  if (customFieldsMap[field.id]) {
+    // This is a segment field - store it with its name
+    segmentFieldsData.set(field.id, {
       id: field.id,
       name: customFieldsMap[field.id],
-      value: field.value || null
+      value: field.value || null,
+      originalIndex: i
     });
   }
 }
 
+// Convert the map to an array, maintaining the order based on the segment number
+const processedCustomFields = [];
+for (const [fieldId, fieldData] of segmentFieldsData) {
+  processedCustomFields.push({
+    id: fieldData.id,
+    name: fieldData.name,
+    value: fieldData.value
+  });
+}
+
+// Sort by the number in the name to ensure correct order
+processedCustomFields.sort((a, b) => {
+  const numA = parseInt(a.name.match(/^\d+/)?.[0] || "0");
+  const numB = parseInt(b.name.match(/^\d+/)?.[0] || "0");
+  return numA - numB;
+});
+
+// Country mapping
 const countryNames = {
   AD: "Andorra",
   AE: "Emiratos Árabes Unidos",
@@ -285,14 +314,18 @@ const countryNames = {
   YT: "Mayotte"
 };
 
-const countryName = countryNames[countryCode] ?? null;
-const countryFlagUrl = countryCode ? `https://flagcdn.com/${countryCode.toLowerCase()}.svg` : null;
+// Validate and get country information
+const countryName = countryCode && countryNames[countryCode] ? countryNames[countryCode] : null;
+const countryFlagUrl = countryCode && /^[A-Z]{2}$/.test(countryCode) ? `https://flagcdn.com/${countryCode.toLowerCase()}.svg` : null;
 
-return {
-  name: `${firstName} ${lastName}`.trim(),
+// Build response object
+const response = {
+  name: fullName,
   id: id,
-  risk: riesgo,
+  risk: generalRisk,
   country: countryName,
   country_flag_url: countryFlagUrl,
   custom_fields: processedCustomFields
 };
+
+return response;
