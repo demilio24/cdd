@@ -31,22 +31,24 @@ const customFieldsMap = {
 const segmentFieldsData = new Map();
 let generalRisk = null;
 
-// First, check if there's a general risk value at index 2
-if (customFields[2] && customFields[2].value) {
-  const riskValue = String(customFields[2].value).toLowerCase().trim();
-  if (["bajo", "medio", "alto"].includes(riskValue)) {
-    generalRisk = riskValue;
-  }
-}
+// The ID for "Resultado Del Riesgo Total" field
+const GENERAL_RISK_FIELD_ID = "DRhthEfIhiiC3s7TmNWn";
 
-// Process ALL custom fields - don't skip any
+// Process ALL custom fields
 for (let i = 0; i < customFields.length; i++) {
   const field = customFields[i];
   
   if (!field || !field.id) continue;
   
+  // Check if this is the general risk field
+  if (field.id === GENERAL_RISK_FIELD_ID && field.value) {
+    const riskValue = String(field.value).toLowerCase().trim();
+    if (["bajo", "medio", "alto"].includes(riskValue)) {
+      generalRisk = riskValue;
+    }
+  }
   // Check if this field ID is one of our known segments
-  if (customFieldsMap[field.id]) {
+  else if (customFieldsMap[field.id]) {
     // This is a segment field - store it with its name
     segmentFieldsData.set(field.id, {
       id: field.id,
