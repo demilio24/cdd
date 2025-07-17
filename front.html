@@ -125,10 +125,12 @@
     margin-top: 10px;
   }
 
-  .dir-bajo { background-color: #d4edda; color: #155724; }
-  .dir-medio { background-color: #fff3cd; color: #856404; }
-  .dir-alto { background-color: #f8d7da; color: #721c24; }
-  .dir-sin { background-color: #e2e3e5; color: #6c757d; }
+  /* --- FIX: Updated selectors for general risk highlighting --- */
+  .dir-risk.bajo { background-color: #d4edda; color: #155724; }
+  .dir-risk.medio { background-color: #fff3cd; color: #856404; }
+  .dir-risk.alto { background-color: #f8d7da; color: #721c24; }
+  .dir-risk.sin { background-color: #e2e3e5; color: #6c757d; }
+
 
   .dir-custom-fields {
     margin-top: 20px;
@@ -221,23 +223,25 @@
     return temp.innerHTML;
   }
 
+  // Format risk value
   function formatRiskValue(value) {
-  if (!value || value === null || value === undefined || value === '') {
-    return { text: 'Sin procesar', class: 'dir-sin' };
+    if (!value || value === null || value === undefined || value === '') {
+      return { text: 'Sin procesar', class: 'sin' };
+    }
+    
+    const normalizedValue = String(value).toLowerCase().trim();
+    
+    switch(normalizedValue) {
+      case 'bajo':
+        return { text: 'Bajo', class: 'bajo' };
+      case 'medio':
+        return { text: 'Medio', class: 'medio' };
+      case 'alto':
+        return { text: 'Alto', class: 'alto' };
+      default:
+        return { text: 'Sin procesar', class: 'sin' };
+    }
   }
-  const normalizedValue = String(value).toLowerCase().trim();
-  switch(normalizedValue) {
-    case 'bajo':
-      return { text: 'Bajo', class: 'dir-bajo' };
-    case 'medio':
-      return { text: 'Medio', class: 'dir-medio' };
-    case 'alto':
-      return { text: 'Alto', class: 'dir-alto' };
-    default:
-      return { text: 'Sin procesar', class: 'dir-sin' };
-  }
-}
-
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -251,11 +255,8 @@
     submitButton.disabled = true;
 
     const contactId = e.target.contact_id.value.trim();
-    console.log("🔍 ID ingresado:", contactId);
 
     try {
-      console.log("📤 Enviando petición con:", { contact_id: contactId });
-      
       const res = await fetch('https://nilsdigital.app.n8n.cloud/webhook/cdd', {
         method: 'POST',
         headers: { 
@@ -265,19 +266,13 @@
         body: JSON.stringify({ contact_id: contactId })
       });
 
-      console.log("📡 Estado de respuesta:", res.status);
-
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
       const raw = await res.json();
-      console.log("📦 Respuesta cruda:", raw);
-
       const data = Array.isArray(raw) ? raw[0] : raw;
-      console.log("✅ Objeto procesado:", data);
 
-      // Check for error in response
       if (data?.error) {
         throw new Error(data.error);
       }
@@ -290,65 +285,58 @@
       const customFields = data?.custom_fields || [];
 
       if (!id || id === "N/A") {
-        errorDiv.innerHTML = `❌ No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.`;
+        errorDiv.innerHTML = '❌ No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.';
         errorDiv.style.display = 'block';
       } else {
-        // Format risk
-        const riskFormatted = formatRiskValue(risk);
+        // --- FIX: Conditional risk display logic ---
+        let riskHtml = '';
+        const hasSegmentFields = customFields && customFields.length > 0;
 
-        // Generate HTML for custom fields
-        let customFieldsHtml = '';
-        let hasValidCustomFields = false;
-        
-        if (customFields && customFields.length > 0) {
-          // Check if any custom field has a valid risk value
-          hasValidCustomFields = customFields.some(field => 
-            field.value && ['bajo', 'medio', 'alto'].includes(String(field.value).toLowerCase().trim())
-          );
-          
-          if (hasValidCustomFields || customFields.length > 0) {
-            customFieldsHtml = `
-              <div class="dir-custom-fields">
-                <div class="dir-custom-fields-title">📊 Perfil De Riesgo Por Segmento De Negocio</div>
-                ${customFields.map(field => {
-                  const fieldRisk = formatRiskValue(field.value);
-                  return `
-                    <div class="dir-custom-field">
-                      <div class="dir-custom-field-name">${sanitizeHtml(field.name)}</div>
-                      <div class="dir-custom-field-value ${fieldRisk.class}">${fieldRisk.text}</div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            `;
-          }
+        if (hasSegmentFields) {
+          // If segment fields exist, show them and HIDE the general risk.
+          riskHtml = `
+            <div class="dir-custom-fields">
+              <div class="dir-custom-fields-title">📊 Perfil De Riesgo Por Segmento De Negocio</div>
+              ${customFields.map(field => {
+                const fieldRisk = formatRiskValue(field.value);
+                return `
+                  <div class="dir-custom-field">
+                    <div class="dir-custom-field-name">${sanitizeHtml(field.name)}</div>
+                    <div class="dir-custom-field-value ${fieldRisk.class}">${fieldRisk.text}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else if (risk) {
+          // Otherwise, if NO segment fields exist, display the general risk.
+          const riskFormatted = formatRiskValue(risk);
+          riskHtml = `
+            <div class="dir-field">
+              <span class="dir-label">⚠️ Riesgo General:</span>
+              <span class="dir-risk ${riskFormatted.class}">${riskFormatted.text}</span>
+            </div>
+          `;
         }
-
-        result.innerHTML = `
- <div class="dir-field">
-    <span class="dir-label">👤 Nombre:</span> 
-    <span class="dir-value">${sanitizeHtml(name)}</span>
-  </div>
-  <div class="dir-field">
-    <span class="dir-label">🆔 ID:</span> 
-    <span class="dir-value">${sanitizeHtml(id)}</span>
-  </div>
-  <div class="dir-field">
-    <span class="dir-label">🌍 País:</span>
-    <span class="dir-value">
-      ${country ? `${sanitizeHtml(country)} <img src="${flagUrl}" alt="${sanitizeHtml(country)}" style="height: 18px; vertical-align: middle; margin-left: 6px;" onerror="this.style.display='none'">` : `<span class="dir-no-data">No especificado</span>`}
-    </span>
-  </div>
-  ${(!hasValidCustomFields && risk) ? `
-    <div class="dir-field">
-      <span class="dir-label">⚠️ Riesgo General:</span>
-      <span class="dir-value dir-risk ${riskFormatted.class}">${riskFormatted.text}</span>
-    </div>
-  ` : ''}
-  ${customFieldsHtml}
-`;
-
         
+        // --- FIX: Updated rendering to use the new riskHtml variable ---
+        result.innerHTML = `
+          <div class="dir-field">
+            <span class="dir-label">👤 Nombre:</span> 
+            <span class="dir-value">${sanitizeHtml(name)}</span>
+          </div>
+          <div class="dir-field">
+            <span class="dir-label">🆔 ID:</span> 
+            <span class="dir-value">${sanitizeHtml(id)}</span>
+          </div>
+          <div class="dir-field">
+            <span class="dir-label">🌍 País:</span>
+            <span class="dir-value">
+              ${country ? `${sanitizeHtml(country)} <img src="${flagUrl}" alt="${sanitizeHtml(country)}" style="height: 18px; vertical-align: middle; margin-left: 6px;" onerror="this.style.display='none'">` : '<span class="dir-no-data">No especificado</span>'}
+            </span>
+          </div>
+          ${riskHtml}
+        `;
         result.style.display = 'block';
       }
 
@@ -362,7 +350,7 @@
       } else if (err.message.includes('404')) {
         errorMessage += "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
       } else if (err.message.includes('500')) {
-        errorMessage += "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
+        errorMessage += "Error del servidor. Por favor, intenta nuevamente más tarde.";
       } else {
         errorMessage += err.message || "Ocurrió un error inesperado. Por favor, intenta nuevamente.";
       }
@@ -377,35 +365,22 @@
 
   // Auto-fill from URL parameter
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("🔄 DOM loaded, checking URL...");
     const search = window.location.search;
-    console.log("🌐 URL search:", search);
-    
-    let contactId = null;
-    
-    // Check for named parameters first (?id=xxx or ?contact_id=xxx)
     const urlParams = new URLSearchParams(search);
-    contactId = urlParams.get('id') || urlParams.get('contact_id');
+    let contactId = urlParams.get('id') || url_params.get('contact_id');
     
-    // If no named parameter, check for direct parameter (?xxx)
     if (!contactId && search.startsWith('?')) {
-      const rawParam = search.slice(1).split('&')[0]; // Get first param only
-      // Validate it's a valid contact ID format
+      const rawParam = search.slice(1).split('&')[0];
       if (rawParam && /^[a-zA-Z0-9_-]+$/.test(rawParam)) {
         contactId = rawParam;
       }
     }
     
-    console.log("🆔 Contact ID found:", contactId);
-    
     if (contactId) {
       const input = document.querySelector('input[name="contact_id"]');
       if (input) {
         input.value = contactId;
-        console.log("✅ Input filled with:", contactId);
-        // Use setTimeout to ensure form is ready
         setTimeout(() => {
-          console.log("🚀 Submitting form automatically...");
           const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
           form.dispatchEvent(submitEvent);
         }, 200);
