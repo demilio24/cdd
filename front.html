@@ -367,7 +367,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     const search = window.location.search;
     const urlParams = new URLSearchParams(search);
-    let contactId = urlParams.get('id') || url_params.get('contact_id');
+    let contactId = urlParams.get('id') || urlParams.get('contact_id'); // FIXED: Changed url_params to urlParams
     
     if (!contactId && search.startsWith('?')) {
       const rawParam = search.slice(1).split('&')[0];
