@@ -346,13 +346,13 @@
       let errorMessage = "❌ ";
       
       if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        errorMessage += "Error de conexión. Por favor, verifica tu conexión a internet e intenta nuevamente.";
+        errorMessage += "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
       } else if (err.message.includes('404')) {
         errorMessage += "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
       } else if (err.message.includes('500')) {
-        errorMessage += "Error del servidor. Por favor, intenta nuevamente más tarde.";
+        errorMessage += "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
       } else {
-        errorMessage += err.message || "Ocurrió un error inesperado. Por favor, intenta nuevamente.";
+        errorMessage += err.message || "No encontramos a nadie con ese ID. Asegúrate de que esté correctamente escrito.";
       }
       
       errorDiv.innerHTML = errorMessage;
